@@ -65,31 +65,43 @@ class PainPointCrawler:
                 soup = BeautifulSoup(response.text, 'html.parser')
 
                 # 네이버 블로그 검색 결과 파싱
-                # VIEW 타입 (일반 검색 결과)
-                blog_items = soup.select('div.view_wrap')
+                # 네이버 블로그 검색 결과 파싱 (2024년 업데이트된 구조)
+                blog_items = soup.select('div.api_subject_bx')
 
                 if not blog_items:
-                    # 다른 형식 시도
+                    # 이전 구조 시도
+                    blog_items = soup.select('div.view_wrap')
+
+                if not blog_items:
                     blog_items = soup.select('li.bx')
 
                 print(f"  발견된 블로그 포스트: {len(blog_items)}개")
 
                 for idx, item in enumerate(blog_items, 1):
                     try:
-                        # 제목과 링크
-                        title_elem = item.select_one('a.title_link') or item.select_one('a.api_txt_lines')
+                        # 제목과 링크 추출 (여러 가지 셀렉터 시도)
+                        title_elem = (item.select_one('a.api_txt_lines') or
+                                    item.select_one('a.title_link') or
+                                    item.select_one('a.sub_txt') or
+                                    item.select_one('a[href*="blog.naver"]'))
+
                         if not title_elem:
                             continue
 
                         title = title_elem.get_text(strip=True)
                         link = title_elem.get('href', '')
 
-                        # 본문 내용
-                        content_elem = item.select_one('div.dsc_link') or item.select_one('dd.sh_blog_passage')
+                        # 본문 추출 (여러 가지 셀렉터 시도)
+                        content_elem = (item.select_one('dd.api_txt_lines') or
+                                      item.select_one('div.dsc_link') or
+                                      item.select_one('dd.sh_blog_passage') or
+                                      item.select_one('div.api_txt'))
                         content = content_elem.get_text(strip=True) if content_elem else ''
 
-                        # 날짜
-                        date_elem = item.select_one('span.sub_time') or item.select_one('dd.txt_inline')
+                        # 날짜 추출 (여러 가지 셀렉터 시도)
+                        date_elem = (item.select_one('span.sub_time') or
+                                   item.select_one('dd.txt_inline') or
+                                   item.select_one('span.sub_txt'))
                         date_str = date_elem.get_text(strip=True) if date_elem else datetime.now().strftime('%Y.%m.%d')
 
                         # 전체 텍스트 (제목 + 본문)
