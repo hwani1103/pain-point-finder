@@ -24,8 +24,10 @@ git checkout claude/pain-point-crawler-01XFb7yECAyqsaWccUdn2Xqs
 ## 🔧 설치
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
+
+**참고**: `pip` 명령어가 안 되는 경우 `python -m pip` 형식을 사용하세요!
 
 ## ▶️ 실행 방법
 
@@ -147,7 +149,7 @@ PAIN_POINT_KEYWORDS = [
 
 ### ModuleNotFoundError
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### 결과가 없어요

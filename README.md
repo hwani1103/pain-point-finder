@@ -38,8 +38,10 @@ Python 3.8 이상이 필요합니다. 설치되어 있지 않다면 [python.org]
 프로젝트 폴더에서 다음 명령어 실행:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
+
+**참고**: `pip` 명령어가 안 되는 경우 항상 `python -m pip` 형식을 사용하세요!
 
 ### 3. 실행
 
