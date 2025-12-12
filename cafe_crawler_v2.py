@@ -95,10 +95,22 @@ class CafePainPointCrawlerV2:
 
                 for link_elem in all_links:
                     href = link_elem.get('href', '')
+                    title = link_elem.get_text(strip=True)
 
-                    # 카페 게시글 링크만 필터링
-                    if 'cafe.naver.com' in href and ('/ArticleRead.nhn' in href or '/ArticleRead.naver' in href):
-                        title = link_elem.get_text(strip=True)
+                    # 카페 게시글 링크만 필터링 (더 관대한 조건)
+                    if 'cafe.naver.com' in href:
+                        # 제외할 패턴들
+                        skip_patterns = [
+                            '/cafehome',  # 카페 홈
+                            '/MyCafeIntro',  # 카페 소개
+                            '/CafeList',  # 카페 목록
+                            '/ArticleList.nhn',  # 게시판 목록
+                            'naver.com/ca-fe',  # 메인
+                        ]
+
+                        # 제외 패턴이 있으면 스킵
+                        if any(pattern in href for pattern in skip_patterns):
+                            continue
 
                         # 광고나 메타정보 제외
                         if title and len(title) > 5 and '광고' not in title and '이유' not in title:
@@ -116,6 +128,16 @@ class CafePainPointCrawlerV2:
                         unique_links.append(link)
 
                 print(f"  발견된 카페 게시글 링크: {len(unique_links)}개")
+
+                # 디버그: 처음 3개 링크 출력
+                if unique_links:
+                    print(f"\n  📋 링크 샘플 (처음 3개):")
+                    for i, link in enumerate(unique_links[:3], 1):
+                        print(f"    {i}. {link['title'][:40]}...")
+                else:
+                    print(f"\n  ⚠️  카페 링크를 찾지 못했습니다!")
+                    print(f"     전체 링크 개수: {len(all_links)}개")
+                    print(f"     cafe.naver.com 포함 링크: {len([l for l in all_links if 'cafe.naver.com' in l.get('href', '')])}개")
 
                 # Stage 2: 각 게시글 방문하여 전체 내용 추출
                 posts_visited = 0
