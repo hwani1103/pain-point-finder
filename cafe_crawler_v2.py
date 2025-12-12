@@ -99,6 +99,10 @@ class CafePainPointCrawlerV2:
 
                     # 카페 게시글 링크만 필터링 (더 관대한 조건)
                     if 'cafe.naver.com' in href:
+                        # 무효한 URL 제외
+                        if 'about:blank' in href or href.startswith('#') or not href.startswith('http'):
+                            continue
+
                         # 제외할 패턴들
                         skip_patterns = [
                             '/cafehome',  # 카페 홈
