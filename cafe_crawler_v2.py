@@ -138,6 +138,7 @@ class CafePainPointCrawlerV2:
                     print(f"\n  📋 링크 샘플 (처음 3개):")
                     for i, link in enumerate(unique_links[:3], 1):
                         print(f"    {i}. {link['title'][:40]}...")
+                        print(f"       URL: {link['url'][:80]}...")
                 else:
                     print(f"\n  ⚠️  카페 링크를 찾지 못했습니다!")
                     print(f"     전체 링크 개수: {len(all_links)}개")
@@ -209,12 +210,15 @@ class CafePainPointCrawlerV2:
 
             if iframe and iframe.get('src'):
                 iframe_url = iframe['src']
-                if not iframe_url.startswith('http'):
-                    iframe_url = 'https://cafe.naver.com' + iframe_url
 
-                # iframe 내부 페이지 요청
-                response = requests.get(iframe_url, headers=self.headers, timeout=10)
-                soup = BeautifulSoup(response.text, 'html.parser')
+                # about:blank나 빈 iframe은 무시
+                if iframe_url and iframe_url not in ['about:blank', 'about:', '#']:
+                    if not iframe_url.startswith('http'):
+                        iframe_url = 'https://cafe.naver.com' + iframe_url
+
+                    # iframe 내부 페이지 요청
+                    response = requests.get(iframe_url, headers=self.headers, timeout=10)
+                    soup = BeautifulSoup(response.text, 'html.parser')
 
             # 게시글 본문 추출 (여러 셀렉터 시도)
             content = ''
