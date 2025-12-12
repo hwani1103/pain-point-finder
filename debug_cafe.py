@@ -18,9 +18,8 @@ def debug_cafe_search(query):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
 
-    # site:cafe.naver.com 검색
-    search_query = f"site:cafe.naver.com {query}"
-    url = f"https://search.naver.com/search.naver?where=web&query={quote(search_query)}&start=1"
+    # where=article: 카페+블로그 게시글 검색
+    url = f"https://search.naver.com/search.naver?where=article&query={quote(query)}&start=1"
 
     print(f"\n요청 URL: {url}")
 

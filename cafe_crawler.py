@@ -66,9 +66,9 @@ class CafePainPointCrawler:
         for page in range(1, max_pages + 1):
             start = (page - 1) * 10 + 1
 
-            # site:cafe.naver.com을 추가하여 카페 게시글만 검색
-            search_query = f"site:cafe.naver.com {query}"
-            url = f"https://search.naver.com/search.naver?where=web&query={quote(search_query)}&start={start}"
+            # 네이버 카페 게시글 검색 (where=article)
+            # article은 카페+블로그 게시글을 검색함
+            url = f"https://search.naver.com/search.naver?where=article&query={quote(query)}&start={start}"
 
             print(f"\n[페이지 {page}/{max_pages}] 크롤링 중...")
 
