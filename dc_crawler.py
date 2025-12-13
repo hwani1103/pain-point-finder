@@ -39,11 +39,19 @@ class DCInsidePainPointCrawler:
         '실망', '헐',
     ]
 
-    def __init__(self):
+    def __init__(self, custom_keywords=None):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         self.results = []
+
+        # 키워드 설정 (커스텀 키워드가 있으면 사용, 없으면 기본)
+        if custom_keywords:
+            self.keywords = custom_keywords
+            print(f"\n✓ 사용자 지정 키워드 {len(custom_keywords)}개 적용")
+        else:
+            self.keywords = self.PAIN_POINT_KEYWORDS
+            print(f"\n✓ 기본 키워드 {len(self.keywords)}개 사용")
 
     def search_gallery(self, gallery_id, max_pages=3, max_posts_per_page=5):
         """
@@ -209,7 +217,7 @@ class DCInsidePainPointCrawler:
         matched = []
         text_lower = text.lower()
 
-        for keyword in self.PAIN_POINT_KEYWORDS:
+        for keyword in self.keywords:
             if keyword in text_lower or keyword in text:
                 matched.append(keyword)
 
@@ -317,8 +325,36 @@ def main():
     gallery_input = input("\n갤러리 ID 입력 (Enter=baseball_new11): ").strip()
     gallery_id = gallery_input if gallery_input else 'baseball_new11'
 
+    # 키워드 설정
+    print("\n[2단계] 키워드 설정")
+    print("-" * 60)
+    print("옵션:")
+    print("  1. 기본 키워드 사용 (불편, 힘들어, 짜증 등 39개)")
+    print("  2. 사용자 지정 키워드만 사용")
+    print("  3. 기본 키워드 + 추가 키워드")
+
+    keyword_option = input("\n선택 (Enter=1): ").strip()
+
+    custom_keywords = None
+
+    if keyword_option == '2':
+        print("\n키워드를 쉼표(,)로 구분해서 입력하세요.")
+        print("예: 힘들어,짜증,불편,ㅠㅠ")
+        keyword_input = input("키워드: ").strip()
+        if keyword_input:
+            custom_keywords = [k.strip() for k in keyword_input.split(',')]
+            print(f"✓ {len(custom_keywords)}개 키워드 설정")
+
+    elif keyword_option == '3':
+        print("\n추가할 키워드를 쉼표(,)로 구분해서 입력하세요.")
+        keyword_input = input("추가 키워드: ").strip()
+        if keyword_input:
+            additional = [k.strip() for k in keyword_input.split(',')]
+            custom_keywords = DCInsidePainPointCrawler.PAIN_POINT_KEYWORDS + additional
+            print(f"✓ 기본 + 추가 = {len(custom_keywords)}개 키워드")
+
     # 설정
-    print("\n[2단계] 크롤링 설정")
+    print("\n[3단계] 크롤링 설정")
     print("-" * 60)
 
     pages_input = input("페이지 수 (Enter=2): ").strip()
@@ -332,7 +368,7 @@ def main():
     print("🚀 크롤링 시작!")
     print("="*60)
 
-    crawler = DCInsidePainPointCrawler()
+    crawler = DCInsidePainPointCrawler(custom_keywords=custom_keywords)
     crawler.search_gallery(gallery_id, max_pages=max_pages, max_posts_per_page=max_posts)
 
     # 결과 확인
