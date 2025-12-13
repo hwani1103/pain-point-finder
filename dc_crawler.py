@@ -53,18 +53,18 @@ class DCInsidePainPointCrawler:
             self.keywords = self.PAIN_POINT_KEYWORDS
             print(f"\n✓ 기본 키워드 {len(self.keywords)}개 사용")
 
-    def search_gallery(self, gallery_id, max_pages=3, max_posts_per_page=5):
+    def search_gallery(self, gallery_id, max_pages=3, target_pain_points=5):
         """
         디시인사이드 갤러리 크롤링
 
         Args:
             gallery_id: 갤러리 ID (예: 'baseball_new11', 'stock')
             max_pages: 크롤링할 페이지 수
-            max_posts_per_page: 각 페이지에서 방문할 게시글 수
+            target_pain_points: 목표 Pain Point 개수 (이 개수만큼 찾을 때까지 계속 탐색)
         """
         print(f"\n=== 디시인사이드 갤러리 크롤링 시작: '{gallery_id}' ===")
         print(f"페이지 수: {max_pages}")
-        print(f"페이지당 게시글: {max_posts_per_page}개")
+        print(f"목표 Pain Point: {target_pain_points}개 (키워드 있는 게시글만)")
 
         for page in range(1, max_pages + 1):
             url = f"https://gall.dcinside.com/board/lists/?id={gallery_id}&page={page}"
@@ -81,10 +81,13 @@ class DCInsidePainPointCrawler:
                 posts = soup.select('tr.ub-content')
                 print(f"  발견된 게시글: {len(posts)}개")
 
-                # 각 게시글 처리
-                posts_visited = 0
-                for idx, post in enumerate(posts[:max_posts_per_page], 1):
-                    if posts_visited >= max_posts_per_page:
+                # 각 게시글 처리 (키워드 있는 것을 찾을 때까지)
+                page_pain_points = 0  # 이 페이지에서 찾은 Pain Point 개수
+                for idx, post in enumerate(posts, 1):
+                    # 이미 목표 달성했으면 중단
+                    current_total = len([r for r in self.results if r.get('갤러리') == gallery_id])
+                    if current_total >= target_pain_points:
+                        print(f"\n  ✓ 목표 달성! ({current_total}개 Pain Point 발견)")
                         break
 
                     try:
@@ -106,15 +109,14 @@ class DCInsidePainPointCrawler:
                         else:
                             post_url = href
 
-                        print(f"\n  [{idx}/{min(len(posts), max_posts_per_page)}] 게시글 방문 중...")
+                        current_count = len([r for r in self.results if r.get('갤러리') == gallery_id])
+                        print(f"\n  [{idx}] 게시글 방문 중... (현재 {current_count}/{target_pain_points})")
                         print(f"      제목: {title[:40]}...")
 
                         # 게시글 내용 추출
                         post_data = self._extract_post_content(post_url, title, gallery_id)
 
                         if post_data:
-                            posts_visited += 1
-
                             # Pain Point 키워드 매칭
                             full_text = f"{post_data['제목']} {post_data['본문']}"
                             matched_keywords = self._find_pain_keywords(full_text)
@@ -127,8 +129,9 @@ class DCInsidePainPointCrawler:
                                 post_data['갤러리'] = gallery_id
 
                                 self.results.append(post_data)
+                                page_pain_points += 1
                             else:
-                                print(f"      ✗ Pain Point 키워드 없음")
+                                print(f"      ✗ 키워드 없음 → 건너뜀")
 
                         # 서버 부하 방지
                         time.sleep(1)
@@ -137,6 +140,12 @@ class DCInsidePainPointCrawler:
                         print(f"      ✗ 게시글 처리 오류: {e}")
                         continue
 
+                # 목표 달성 확인
+                current_total = len([r for r in self.results if r.get('갤러리') == gallery_id])
+                if current_total >= target_pain_points:
+                    print(f"\n✓ 목표 달성! 크롤링 종료")
+                    break
+
                 # 페이지 간 딜레이
                 time.sleep(1.5)
 
@@ -144,7 +153,8 @@ class DCInsidePainPointCrawler:
                 print(f"  ✗ 페이지 {page} 크롤링 오류: {e}")
                 continue
 
-        print(f"\n'{gallery_id}' 크롤링 완료: {len([r for r in self.results if r.get('갤러리') == gallery_id])}개 Pain Point 발견")
+        final_count = len([r for r in self.results if r.get('갤러리') == gallery_id])
+        print(f"\n'{gallery_id}' 크롤링 완료: {final_count}개 Pain Point 발견")
 
     def _extract_post_content(self, url, title, gallery_id):
         """게시글 본문 추출"""
@@ -382,19 +392,20 @@ def main():
     print("\n[3단계] 크롤링 설정")
     print("-" * 60)
 
-    pages_input = input("페이지 수 (Enter=2): ").strip()
-    max_pages = int(pages_input) if pages_input else 2
+    pages_input = input("최대 페이지 수 (Enter=5): ").strip()
+    max_pages = int(pages_input) if pages_input else 5
 
-    posts_input = input("페이지당 게시글 수 (Enter=5): ").strip()
-    max_posts = int(posts_input) if posts_input else 5
+    target_input = input("목표 Pain Point 개수 (Enter=10): ").strip()
+    target_points = int(target_input) if target_input else 10
 
     # 크롤링 시작
     print("\n" + "="*60)
     print("🚀 크롤링 시작!")
+    print(f"💡 키워드 있는 게시글 {target_points}개를 찾을 때까지 탐색합니다")
     print("="*60)
 
     crawler = DCInsidePainPointCrawler(custom_keywords=custom_keywords)
-    crawler.search_gallery(gallery_id, max_pages=max_pages, max_posts_per_page=max_posts)
+    crawler.search_gallery(gallery_id, max_pages=max_pages, target_pain_points=target_points)
 
     # 결과 확인
     if not crawler.results:
