@@ -173,6 +173,9 @@ class DCInsidePainPointCrawler:
                 print(f"      ✗ 본문 추출 실패 (너무 짧음: {len(content)}자)")
                 return None
 
+            # 본문 정제
+            cleaned_content = self._clean_text(content)
+
             # 날짜 추출
             date_str = self._extract_date(soup)
 
@@ -182,7 +185,7 @@ class DCInsidePainPointCrawler:
             return {
                 '날짜': date_str,
                 '제목': title,
-                '본문': content[:500],  # 처음 500자만
+                '본문': cleaned_content,  # 정제된 본문
                 '본문_전체_길이': len(content),
                 '조회수': views,
                 '링크': url,
@@ -211,6 +214,28 @@ class DCInsidePainPointCrawler:
             return '0'
         except:
             return '0'
+
+    def _clean_text(self, text):
+        """텍스트 정제 (CSV 가독성 향상)"""
+        import re
+
+        # 1. 줄바꿈을 공백으로 치환
+        text = text.replace('\n', ' ').replace('\r', ' ')
+
+        # 2. 탭을 공백으로 치환
+        text = text.replace('\t', ' ')
+
+        # 3. 연속된 공백을 하나로
+        text = re.sub(r'\s+', ' ', text)
+
+        # 4. 앞뒤 공백 제거
+        text = text.strip()
+
+        # 5. 길이 제한 (150자)
+        if len(text) > 150:
+            text = text[:150] + '...'
+
+        return text
 
     def _find_pain_keywords(self, text):
         """Pain Point 키워드 찾기"""
